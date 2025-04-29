@@ -1,4 +1,4 @@
-declare module 'cubesql_addon' {
+declare module 'cubesql.node' {
     export interface Database {
         dbPointer: any;
         connect(host: string, port: number, username: string, password: string, timeout: number, encryption: number): any;
