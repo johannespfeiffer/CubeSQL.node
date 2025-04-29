@@ -3,7 +3,7 @@
   "version": "0.1.4",
   "description": "Node.js wrapper for the CubeSQL C SDK.",
   "main": "build/Release/cubesql_addon.node",
-  "types": "types/cubesql_addon.d.ts",
+  "types": "types/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "node-gyp rebuild"
@@ -22,7 +22,6 @@
     "binding.gyp",
     "cubesql_addon.cpp",
     "CubeSQL-SDK/",
-    "build/",
     "types/"
   ],
   "author": "Johannes Pfeiffer",

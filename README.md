@@ -56,4 +56,4 @@ npm i
 ## Third Party Components
 
 This package bundles the CubeSQL SDK licensed under the MIT License.  
-See [CubeSQL SDK](https://github.com/sqlabs/CubeSQL-SDK) for more information.
+See [CubeSQL SDK](https://github.com/cubesql/sdk) for more information.

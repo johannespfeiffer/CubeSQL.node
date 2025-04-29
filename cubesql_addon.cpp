@@ -27,14 +27,13 @@ Napi::Value ConnectToCubeSQL(const Napi::CallbackInfo& info) {
     csqldb* db = nullptr;
     int result = cubesql_connect(&db, host.c_str(), port, username.c_str(), password.c_str(), timeout, encryption);
 
-    if (result != CUBESQL_NOERR) {
-        return Napi::Number::New(env, result);
+    if (result != CUBESQL_NOERR || db == nullptr) {
+        Napi::Error::New(env, "Failed to connect to CubeSQL server").ThrowAsJavaScriptException();
+        return env.Null();
     }
 
-    // Store the db pointer in a JavaScript object for further use
     Napi::Object dbObject = Napi::Object::New(env);
     dbObject.Set("dbPointer", Napi::External<csqldb>::New(env, db));
-
     return dbObject;
 }
 
@@ -49,7 +48,10 @@ void DisconnectFromCubeSQL(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return;
+    }
     cubesql_disconnect(db, kTRUE);
 }
 
@@ -96,6 +98,10 @@ Napi::Value ExecuteSQL(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     std::string sql = info[1].As<Napi::String>();
 
     int result = cubesql_execute(db, sql.c_str());
@@ -113,6 +119,10 @@ Napi::Value SelectSQL(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     std::string sql = info[1].As<Napi::String>();
 
     csqlc* cursor = cubesql_select(db, sql.c_str(), kFALSE);
@@ -138,7 +148,10 @@ Napi::Value CommitTransaction(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_commit(db);
     return Napi::Number::New(env, result);
 }
@@ -154,7 +167,10 @@ Napi::Value RollbackTransaction(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_rollback(db);
     return Napi::Number::New(env, result);
 }
@@ -170,7 +186,10 @@ Napi::Value BeginTransaction(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_begintransaction(db);
     return Napi::Number::New(env, result);
 }
@@ -187,6 +206,10 @@ Napi::Value BindSQL(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     std::string sql = info[1].As<Napi::String>();
 
     Napi::Array colvalueArray = info[2].As<Napi::Array>();
@@ -224,7 +247,10 @@ Napi::Value PingCubeSQL(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_ping(db);
     return Napi::Number::New(env, result);
 }
@@ -240,7 +266,10 @@ void CancelCubeSQL(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return;
+    }
     cubesql_cancel(db);
 }
 
@@ -255,7 +284,10 @@ Napi::Value GetErrorCode(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_errcode(db);
     return Napi::Number::New(env, result);
 }
@@ -271,7 +303,10 @@ Napi::Value GetErrorMessage(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     char* errmsg = cubesql_errmsg(db);
     return Napi::String::New(env, errmsg);
 }
@@ -287,7 +322,10 @@ Napi::Value GetChanges(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int64_t changes = cubesql_changes(db);
     return Napi::Number::New(env, static_cast<double>(changes));
 }
@@ -303,7 +341,10 @@ void SetTraceCallback(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return;
+    }
     Napi::Function callback = info[1].As<Napi::Function>();
     auto traceCallback = [](const char* message, void* data) {
         Napi::FunctionReference* ref = static_cast<Napi::FunctionReference*>(data);
@@ -325,6 +366,10 @@ Napi::Value SetDatabase(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     std::string dbname = info[1].As<Napi::String>();
 
     int result = cubesql_set_database(db, dbname.c_str());
@@ -342,7 +387,10 @@ Napi::Value GetAffectedRows(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int64_t affectedRows = cubesql_affected_rows(db);
     return Napi::Number::New(env, static_cast<double>(affectedRows));
 }
@@ -358,7 +406,10 @@ Napi::Value GetLastInsertedRowID(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int64_t lastRowID = cubesql_last_inserted_rowID(db);
     return Napi::Number::New(env, static_cast<double>(lastRowID));
 }
@@ -387,6 +438,10 @@ Napi::Value SendData(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     Napi::Buffer<char> buffer = info[1].As<Napi::Buffer<char>>();
     int length = info[2].As<Napi::Number>();
 
@@ -405,7 +460,10 @@ Napi::Value SendEndData(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_send_enddata(db);
     return Napi::Number::New(env, result);
 }
@@ -421,7 +479,10 @@ Napi::Value ReceiveData(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
-
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int len = 0;
     int is_end_chunk = 0;
     char* data = cubesql_receive_data(db, &len, &is_end_chunk);
@@ -448,6 +509,10 @@ Napi::Value PrepareVM(const Napi::CallbackInfo& info) {
 
     Napi::Object dbObject = info[0].As<Napi::Object>();
     csqldb* db = dbObject.Get("dbPointer").As<Napi::External<csqldb>>().Data();
+    if (!db) {
+        Napi::Error::New(env, "Invalid database pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     std::string sql = info[1].As<Napi::String>();
 
     csqlvm* vm = cubesql_vmprepare(db, sql.c_str());
@@ -472,6 +537,10 @@ Napi::Value BindVMInt(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
     int intValue = info[2].As<Napi::Number>();
 
@@ -490,6 +559,10 @@ Napi::Value BindVMDouble(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
     double doubleValue = info[2].As<Napi::Number>();
 
@@ -508,6 +581,10 @@ Napi::Value BindVMText(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
     std::string textValue = info[2].As<Napi::String>();
 
@@ -526,6 +603,10 @@ Napi::Value BindVMNull(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
 
     int result = cubesql_vmbind_null(vm, index);
@@ -543,6 +624,10 @@ Napi::Value BindVMInt64(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
     int64_t int64Value = info[2].As<Napi::Number>().Int64Value();
 
@@ -561,6 +646,10 @@ Napi::Value BindVMZeroBlob(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
     int length = info[2].As<Napi::Number>();
 
@@ -579,7 +668,10 @@ Napi::Value ExecuteVM(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
-
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_vmexecute(vm);
     return Napi::Number::New(env, result);
 }
@@ -595,6 +687,10 @@ Napi::Value SelectVM(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
 
     csqlc* cursor = cubesql_vmselect(vm);
     if (!cursor) {
@@ -618,7 +714,10 @@ Napi::Value CloseVM(const Napi::CallbackInfo& info) {
 
     Napi::Object vmObject = info[0].As<Napi::Object>();
     csqlvm* vm = vmObject.Get("vmPointer").As<Napi::External<csqlvm>>().Data();
-
+    if (!vm) {
+        Napi::Error::New(env, "Invalid VM pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_vmclose(vm);
     return Napi::Number::New(env, result);
 }
@@ -634,7 +733,10 @@ Napi::Value GetCursorNumRows(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
-
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_cursor_numrows(cursor);
     return Napi::Number::New(env, result);
 }
@@ -650,7 +752,10 @@ Napi::Value GetCursorNumColumns(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
-
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_cursor_numcolumns(cursor);
     return Napi::Number::New(env, result);
 }
@@ -666,7 +771,10 @@ Napi::Value GetCursorCurrentRow(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
-
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_cursor_currentrow(cursor);
     return Napi::Number::New(env, result);
 }
@@ -682,6 +790,10 @@ Napi::Value SeekCursor(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
 
     int result = cubesql_cursor_seek(cursor, index);
@@ -699,7 +811,10 @@ Napi::Value IsCursorEOF(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
-
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int result = cubesql_cursor_iseof(cursor);
     return Napi::Boolean::New(env, result);
 }
@@ -715,6 +830,10 @@ Napi::Value GetCursorColumnType(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int index = info[1].As<Napi::Number>();
 
     int result = cubesql_cursor_columntype(cursor, index);
@@ -732,6 +851,10 @@ Napi::Value GetCursorField(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
     int column = info[2].As<Napi::Number>();
 
@@ -755,6 +878,10 @@ Napi::Value GetCursorFieldBuffer(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
     int column = info[2].As<Napi::Number>();
 
@@ -780,6 +907,10 @@ Napi::Value GetCursorRowID(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
 
     int64_t rowID = cubesql_cursor_rowid(cursor, row);
@@ -797,6 +928,10 @@ Napi::Value GetCursorInt64(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
     int column = info[2].As<Napi::Number>();
     int64_t defaultValue = info[3].As<Napi::Number>().Int64Value();
@@ -816,6 +951,10 @@ Napi::Value GetCursorInt(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
     int column = info[2].As<Napi::Number>();
     int defaultValue = info[3].As<Napi::Number>();
@@ -835,6 +974,10 @@ Napi::Value GetCursorDouble(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
     int column = info[2].As<Napi::Number>();
     double defaultValue = info[3].As<Napi::Number>();
@@ -854,6 +997,10 @@ Napi::Value GetCursorCString(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
     int column = info[2].As<Napi::Number>();
 
@@ -876,6 +1023,10 @@ Napi::Value GetCursorCStringStatic(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return env.Null();
+    }
     int row = info[1].As<Napi::Number>();
     int column = info[2].As<Napi::Number>();
     Napi::Buffer<char> staticBuffer = info[3].As<Napi::Buffer<char>>();
@@ -899,7 +1050,10 @@ void FreeCursor(const Napi::CallbackInfo& info) {
 
     Napi::Object cursorObject = info[0].As<Napi::Object>();
     csqlc* cursor = cursorObject.Get("cursorPointer").As<Napi::External<csqlc>>().Data();
-
+    if (!cursor) {
+        Napi::Error::New(env, "Invalid cursor pointer").ThrowAsJavaScriptException();
+        return;
+    }
     cubesql_cursor_free(cursor);
 }
 
