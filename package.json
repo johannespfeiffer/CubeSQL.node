@@ -22,7 +22,8 @@
     "binding.gyp",
     "cubesql_addon.cpp",
     "CubeSQL-SDK/",
-    "build/"
+    "build/",
+    "types/"
   ],
   "author": "Johannes Pfeiffer",
   "license": "ISC",
