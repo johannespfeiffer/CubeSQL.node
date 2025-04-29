@@ -16,10 +16,9 @@
         "GCC_ENABLE_CPP_RTTI": "YES"
         },
     "include_dirs": [
-        "<!(node -p \"require('node-addon-api').include\")",
+        "<!@(node -p \"require('node-addon-api').include\")",
         "CubeSQL-SDK/C_SDK",
-        "CubeSQL-SDK/C_SDK/crypt",
-        "node_modules/node-addon-api"
+        "CubeSQL-SDK/C_SDK/crypt"
     ],
       "libraries": [
         "-L/opt/homebrew/opt/openssl@3/lib",

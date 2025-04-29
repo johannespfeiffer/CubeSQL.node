@@ -3,8 +3,8 @@ Wrapper for Marco Bambinis [native C SDK](https://github.com/cubesql/sdk.git)
 
 ## Usage Example
 ```ts
-import * as cubesql from 'cubesql.node"';
-import { Database } from 'cubesql.node"';
+import * as cubesql from 'cubesql.node';
+import { Database } from 'cubesql.node';
 
 const db = cubesql.connectToCubeSQL('host', 4430, 'username', 'password', 12, cubesql.CUBESQL_ENCRYPTION_NONE);
 if (!db) {
@@ -48,6 +48,7 @@ git clone https://github.com/johannespfeiffer/CubeSQL.node.git
 
 Install dependencies and build
 ```
+brew install libressl
 npm i
 ```
 
